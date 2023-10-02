@@ -1,20 +1,37 @@
-import 'package:blog_explorer/common/utils/app_colors.dart';
-import 'package:blog_explorer/common/utils/assets.dart';
-import 'package:blog_explorer/features/home/controller/home_controller.dart';
 import 'package:blog_explorer/features/home/screens/blog.dart';
-import 'package:blog_explorer/features/home/screens/favourite_blogs.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:get/get_core/get_core.dart';
-import 'package:get/get_instance/get_instance.dart';
-import 'package:get/get_navigation/get_navigation.dart';
-import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({super.key});
+import '../../../common/utils/app_colors.dart';
+import '../controller/home_controller.dart';
+
+class FavouriteBlogsPage extends StatefulWidget {
+  const FavouriteBlogsPage({super.key});
+
+  @override
+  State<FavouriteBlogsPage> createState() => _FavouriteBlogsPageState();
+}
+
+class _FavouriteBlogsPageState extends State<FavouriteBlogsPage> {
   final controller = Get.put(HomeController());
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      Get.showOverlay(
+        asyncFunction: () => controller.getFavouriteBlogsFromDB(),
+        loadingWidget: const Center(
+          child: CircularProgressIndicator(
+            color: Colors.white,
+          ),
+        ),
+      );
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = Get.width;
@@ -22,38 +39,25 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.primaryColor,
-      floatingActionButton: ElevatedButton(
-        style: const ButtonStyle(
-          shape: MaterialStatePropertyAll(CircleBorder()),
-          iconSize: MaterialStatePropertyAll(35),
-          minimumSize: MaterialStatePropertyAll(Size.fromRadius(30)),
-        ),
-        child: const Icon(
-          Icons.favorite_border,
-        ),
-        onPressed: () => Get.to(const FavouriteBlogsPage()),
-      ),
       appBar: AppBar(
         backgroundColor: AppColors.primaryColor,
-        leading: Padding(
-          padding: EdgeInsets.only(
-            left: width * 0.05,
-          ),
-          child: SvgPicture.asset(
-            AppAssets.logoIcon,
+        title: Text(
+          'Favourite Blogs',
+          style: GoogleFonts.bayon(
+            color: Colors.white,
+            fontSize: width * 0.05,
           ),
         ),
-        leadingWidth: width * 0.4,
       ),
       body: Obx(() {
         return SizedBox(
           height: height,
-          child: controller.blogs.isNotEmpty
+          child: controller.favouriteBlogs.isNotEmpty
               ? SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: controller.blogs.map((blog) {
+                    children: controller.favouriteBlogs.map((blog) {
                       return Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: width * 0.05,
@@ -73,11 +77,11 @@ class HomePage extends StatelessWidget {
                                     );
                                   },
                                   child: Hero(
-                                    tag: 'image${blog.id!}',
+                                    tag: 'image${blog?.id!}',
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(15),
                                       child: CachedNetworkImage(
-                                        imageUrl: blog.imageUrl!,
+                                        imageUrl: blog!.imageUrl!,
                                         memCacheHeight: 182,
                                         memCacheWidth: 137,
                                         height: height * 0.25,
@@ -155,7 +159,7 @@ class HomePage extends StatelessWidget {
                   child: SizedBox(
                     width: width * 0.7,
                     child: Text(
-                      'There is no blogs',
+                      'There is no liked Blogs',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.bayon(
                         color: Colors.white,

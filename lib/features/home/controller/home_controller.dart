@@ -13,6 +13,7 @@ import '../../../common/services/sqlite_sevice.dart';
 
 class HomeController extends GetxController {
   RxList<BlogModel> blogs = <BlogModel>[].obs;
+  RxList<BlogModel?> favouriteBlogs = <BlogModel?>[].obs;
   Database? database;
   SharedPreferences? prefs;
   RxMap likedBlogs = {}.obs;
@@ -35,6 +36,7 @@ class HomeController extends GetxController {
         ),
       );
     });
+
     super.onInit();
   }
 
@@ -86,5 +88,17 @@ class HomeController extends GetxController {
     final db = await SqliteService.initializeDB();
     final List<Map<String, Object?>> queryResult = await db.query('blogs');
     return queryResult.map((e) => BlogModel.fromJson(e)).toList();
+  }
+
+  Future<void> getFavouriteBlogsFromDB() async {
+    favouriteBlogs.clear();
+    final db = await SqliteService.initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('blogs');
+    for (var e in queryResult) {
+      final blog = BlogModel.fromJson(e);
+      if (likedBlogs[blog.id] ?? false) {
+        favouriteBlogs.add(blog);
+      }
+    }
   }
 }
